@@ -7,10 +7,13 @@ import logging
 import csv
 
 logging.basicConfig(level=logging.INFO)
-PROXY = "127.0.0.1:43619"
+# PROXY = "127.0.0.1:43619"
+PROXY = "127.0.0.1:42847"
 
 co = webdriver.ChromeOptions()
 co.add_argument("--proxy-server=%s" % PROXY)
+
+country_code = "jp"
 # co.add_argument("--lang=ja_JP")
 
 chrome = webdriver.Chrome(options=co)
@@ -24,7 +27,7 @@ with open("data_out.csv", "a") as f:
     f_csv = csv.DictWriter(f, csv_header)
     f_csv.writeheader()
 
-URLSTACK = [("basepage", "https://play.google.com/store/apps/category/GAME")]
+URLSTACK = [("basepage", "https://play.google.com/store/apps/category/GAME" + "?gl=" + country_code)]
 # URLSTACK = [('morepage', 'https://play.google.com/store/apps/collection/cluster?clp=ogoQCAESBEdBTUUqAggCUgIIAQ%3D%3D:S:ANO1ljJlEdM&gsr=ChOiChAIARIER0FNRSoCCAJSAggB:S:ANO1ljJdubc')]
 # URLSTACK = [('catpage', 'https://play.google.com/store/apps/category/GAME_STRATEGY')]
 # URLSTACK = [('detailpage', 'https://play.google.com/store/apps/details?id=com.nianticlabs.pokemongo')]
