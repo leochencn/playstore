@@ -27,7 +27,7 @@ with open("data_out.csv", "a") as f:
     f_csv = csv.DictWriter(f, csv_header)
     f_csv.writeheader()
 
-URLSTACK = [("basepage", "https://play.google.com/store/apps/category/GAME" + "?gl=" + country_code)]
+URLSTACK = [("basepage", "https://play.google.com/store/apps/category/GAME")]
 # URLSTACK = [('morepage', 'https://play.google.com/store/apps/collection/cluster?clp=ogoQCAESBEdBTUUqAggCUgIIAQ%3D%3D:S:ANO1ljJlEdM&gsr=ChOiChAIARIER0FNRSoCCAJSAggB:S:ANO1ljJdubc')]
 # URLSTACK = [('catpage', 'https://play.google.com/store/apps/category/GAME_STRATEGY')]
 # URLSTACK = [('detailpage', 'https://play.google.com/store/apps/details?id=com.nianticlabs.pokemongo')]
@@ -41,7 +41,7 @@ def scrollToBottomUntillNotLoad(chrome, xpathstr):
         # print(newEnum, oldEnum)
         oldEnum = newEnum
         chrome.find_element_by_tag_name('body').send_keys(Keys.END)
-        time.sleep(2)
+        time.sleep(3)
         cs = chrome.find_elements_by_xpath(xpathstr)
         newEnum = len(cs)
 
@@ -53,8 +53,14 @@ def grabFromStack(chrome):
         if u[1] not in noLoopMap:
             noLoopMap[u[1]] = 1
             logging.info("type:{},url:{}".format(u[0], u[1]))
+            target_url = u[1]
+            if "?" in target_url:
+                target_url += "&gl=" + country_code
+            else:
+                target_url += "?gl=" + country_code
+            chrome.get(target_url)
             if u[0] == "basepage":
-                chrome.get(u[1])
+                # chrome.get(u[1])
                 scrollToBottomUntillNotLoad(chrome, "//div[@class='wXUyZd']/a")
 
                 ms = chrome.find_elements_by_xpath("//div[@class='W9yFB']/a")
@@ -69,14 +75,14 @@ def grabFromStack(chrome):
                 for i in hs:
                     URLSTACK.append(("detailpage", i.get_attribute('href').strip()))
             elif u[0] == "morepage":
-                chrome.get(u[1])
+                # chrome.get(u[1])
                 scrollToBottomUntillNotLoad(chrome, "//div[@class='wXUyZd']/a")
 
                 hs = chrome.find_elements_by_xpath("//div[@class='wXUyZd']/a")
                 for i in hs:
                     URLSTACK.append(("detailpage", i.get_attribute('href').strip()))
             elif u[0] == "catpage":
-                chrome.get(u[1])
+                # chrome.get(u[1])
                 scrollToBottomUntillNotLoad(chrome, "//div[@class='wXUyZd']/a")
                 hs = chrome.find_elements_by_xpath("//div[@class='wXUyZd']/a")
                 for i in hs:
@@ -86,7 +92,7 @@ def grabFromStack(chrome):
                     URLSTACK.append(("morepage", ele.get_attribute('href').strip()))
             elif u[0] == "detailpage":
                 ginfo = {"url":u[1],"time":datetime.utcnow().timestamp()}
-                chrome.get(u[1])
+                # chrome.get(u[1])
                 title = chrome.find_elements_by_xpath("//h1[@class='AHFaub']/span")
                 ginfo["name"] = title[0].text if len(title) > 0 else ""
 
