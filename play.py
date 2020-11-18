@@ -1,36 +1,51 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from datetime import datetime
+from datetime import datetime, date
 import re
 import time
 import logging
 import csv
 
 logging.basicConfig(level=logging.INFO)
-# PROXY = "127.0.0.1:43619"
-PROXY = "127.0.0.1:42847"
+PROXY = "127.0.0.1:43619"
+# PROXY = "127.0.0.1:42847"
 
 co = webdriver.ChromeOptions()
 co.add_argument("--proxy-server=%s" % PROXY)
 
-country_code = "jp"
+# country_code = "jp"
 # co.add_argument("--lang=ja_JP")
+country_code_list = ["jp", "hk", "kr", "gb", "fr", "de", "tw"]
 
-chrome = webdriver.Chrome(options=co)
+def grabFromContries():
+    chrome = webdriver.Chrome(options=co)
+    for country in country_code_list:
+        csvf = generateFileName(country)
+        with open(csvf, "a") as f:
+            f_csv = csv.DictWriter(f, csv_header)
+            f_csv.writeheader()
+        grabFromStack(chrome, country, csvf)
+
+
+# chrome = webdriver.Chrome(options=co)
 # chrome.implicitly_wait(5)
 
 csv_header = ["name", "time", "url", "company", "company_url", "category", "category_url", "comment_number",
               "comment_score", "score5ratio", "score4ratio", "score3ratio", "score2ratio", "score1ratio",
               "updatetime", "size", "android", "screen", "installnum", "version"]
 
-with open("data_out.csv", "a") as f:
-    f_csv = csv.DictWriter(f, csv_header)
-    f_csv.writeheader()
+# with open("data_out.csv", "a") as f:
+#     f_csv = csv.DictWriter(f, csv_header)
+#     f_csv.writeheader()
 
-URLSTACK = [("basepage", "https://play.google.com/store/apps/category/GAME")]
+
 # URLSTACK = [('morepage', 'https://play.google.com/store/apps/collection/cluster?clp=ogoQCAESBEdBTUUqAggCUgIIAQ%3D%3D:S:ANO1ljJlEdM&gsr=ChOiChAIARIER0FNRSoCCAJSAggB:S:ANO1ljJdubc')]
 # URLSTACK = [('catpage', 'https://play.google.com/store/apps/category/GAME_STRATEGY')]
 # URLSTACK = [('detailpage', 'https://play.google.com/store/apps/details?id=com.nianticlabs.pokemongo')]
+
+def generateFileName(country_code):
+    dstr = date.today().isoformat()
+    return "data_{}_{}.csv".format(country_code, dstr)
 
 def scrollToBottomUntillNotLoad(chrome, xpathstr):
     oldEnum = 0
@@ -45,9 +60,11 @@ def scrollToBottomUntillNotLoad(chrome, xpathstr):
         cs = chrome.find_elements_by_xpath(xpathstr)
         newEnum = len(cs)
 
-noLoopMap = {}
+# noLoopMap = {}
 
-def grabFromStack(chrome):
+def grabFromStack(chrome, country_code, cvsf):
+    URLSTACK = [("basepage", "https://play.google.com/store/apps/category/GAME")]
+    noLoopMap = {}
     while len(URLSTACK)>0:
         u = URLSTACK.pop(0)
         if u[1] not in noLoopMap:
@@ -112,7 +129,7 @@ def grabFromStack(chrome):
                 score_detail = chrome.find_elements_by_xpath("//div[@class='mMF0fd']/span[contains(@class,'L2o20d')]")
                 for index, s in enumerate(score_detail):
                     s_num = s.get_attribute("style")
-                    sr = re.search("(\d+)%", s_num)
+                    sr = re.search(r"(\d+)%", s_num)
                     ginfo["score"+str(5-index)+"ratio"] = sr.group(1) if sr else "0"
 
                 anchor_list = chrome.find_elements_by_xpath("//div[@class='hAyfc']")
@@ -138,7 +155,7 @@ def grabFromStack(chrome):
                     if item not in ginfo:
                         ginfo[item] = ""
                 # print(ginfo)
-                with open("data_out.csv", "a") as f:
+                with open(cvsf, "a") as f:
                     f_csv = csv.DictWriter(f, csv_header)
                     f_csv.writerow(ginfo)
 
@@ -153,6 +170,4 @@ def grabFromStack(chrome):
 
 
 if __name__ == "__main__":
-    grabFromStack(chrome)
-    print(URLSTACK)
-    print(len(URLSTACK))
+    grabFromContries()
